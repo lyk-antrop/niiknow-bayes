@@ -18,7 +18,7 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         $classifier->learn('Tokyo Japan Chinese', 'japanese');
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->wordFrequencyCount['chinese'];
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5);
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -26,7 +26,7 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->wordFrequencyCount['japanese'];
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1);
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
@@ -42,7 +42,7 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         $classifier->fromJson($json);
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->wordFrequencyCount['chinese'];
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5);
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -50,7 +50,7 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->wordFrequencyCount['japanese'];
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1);
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
@@ -91,7 +91,7 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         $classifier->learn('Tokyo Japan Chinese', 'japanese');
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->wordFrequencyCount['chinese'];
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5);
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -99,7 +99,7 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->wordFrequencyCount['japanese'];
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1);
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
@@ -108,14 +108,14 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         // now test it to see that it correctly categorizes a new document
         $this->assertTrue($classifier->categorize('Chinese Chinese Chinese Tokyo Japan') === 'chinese');
 
-        $json = json_encode($classifier);
+        $json = $classifier->toJson();
 
         // test again but with deserialized json
         $classifier = new Bayes();
         $classifier->fromJson($json);
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->wordFrequencyCount['chinese'];
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5);
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -123,7 +123,7 @@ class BayesTests extends \PHPUnit\Framework\TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->wordFrequencyCount['japanese'];
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1);
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
