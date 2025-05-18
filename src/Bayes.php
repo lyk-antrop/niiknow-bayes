@@ -2,6 +2,8 @@
 
 namespace Niiknow;
 
+use RuntimeException;
+
 /**
  * TODO: Balik na GitHubu z toho udelej
  *
@@ -99,7 +101,7 @@ class Bayes implements ClassifierInterface
         $chosenCategory = null;
 
         if ($this->totalDocuments > 0) {
-            $probabilities = $this->probabilities($text);
+            $probabilities = $this->probabilities($text) ?? [];
 
             // iterate thru our categories to find the one with max probability
             // for this text
@@ -116,6 +118,10 @@ class Bayes implements ClassifierInterface
 
     public function learn(string $text, string $category): self
     {
+        if ($this->tokenizer === null) {
+            throw new RuntimeException('Tokenizer is not set');
+        }
+
         // initialize category data structures if we've never seen this category
         $this->initializeCategory($category);
 
@@ -155,6 +161,10 @@ class Bayes implements ClassifierInterface
 
     public function probabilities(string $text): ?array
     {
+        if ($this->tokenizer === null) {
+            throw new RuntimeException('Tokenizer is not set');
+        }
+
         $probabilities = [];
 
         if ($this->totalDocuments > 0) {
@@ -210,7 +220,11 @@ class Bayes implements ClassifierInterface
             $result[$k] = $this->{$k};
         }
 
-        return json_encode($result);
+        if (($result = json_encode($result)) === false) {
+            throw new RuntimeException('Failed to serialize to JSON: ' . json_last_error_msg());
+        }
+
+        return $result;
     }
 
     public function reset(): self
@@ -247,6 +261,13 @@ class Bayes implements ClassifierInterface
         return $this;
     }
 
+    /**
+     * Get the word frequency count for a specific category
+     * 
+     * Used in tests, not a part of the interface
+     *
+     * @return array<string,int>|null
+     */
     public function getWordFrequencyCount(string $category): ?array
     {
         if (isset($this->wordFrequencyCount[$category])) {
