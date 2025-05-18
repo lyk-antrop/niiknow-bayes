@@ -5,21 +5,21 @@ namespace Niiknow;
 interface ClassifierInterface
 {
     /**
-     * Identify the category of the provided text parameter
+     * Identify the category of the provided $input parameter
      */
-    public function categorize(string $text): ?string;
+    public function categorize(string|TokenizableInterface $input): ?string;
 
     /**
      * Teach the classifier
      */
-    public function learn(string $text, string $category): self;
+    public function learn(string|TokenizableInterface $input, string $category): self;
 
     /**
      * Extract the probabilities for each known category
      *
      * @return array<string,float>|null
      */
-    public function probabilities(string $text): ?array;
+    public function probabilities(string|TokenizableInterface $input): ?array;
 
     /**
      * Load the classifier from JSON or array data

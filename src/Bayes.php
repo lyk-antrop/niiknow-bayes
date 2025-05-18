@@ -1,39 +1,32 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Niiknow;
 
 use RuntimeException;
 
 /**
- * TODO: Balik na GitHubu z toho udelej
- *
  * Naive-Bayes Classifier
  * @see https://en.wikipedia.org/wiki/Naive_Bayes_classifier
  *
  * Originally from Niiknow
  * @see https://github.com/Niiknow/Bayes
  *
- * This package was rewritten to accept already tokenized input. Also, tokenizer is separated from the class.
- *
- * TODO: Tokenizer interface
- * TODO: Accept array input
- * TODO: Separate tokenizer
- * TODO: Tests from Niiknow package
- */
-
-/**
- * Naive-Bayes Classifier
+ * CHANGES:
+ * - Separate Tokenizer from the classifier
+ * - Tokenizers accept string or TokenizableInterface, "tokenizable" objects implement their own tokenization mechanism
  */
 class Bayes implements ClassifierInterface
 {
     /** @var string[] */
     private const STATE_KEYS = [
-        'categories', 
+        'categories',
         'docCount',
         'totalDocuments',
-        'vocabulary', 
+        'vocabulary',
         'vocabularySize',
-        'wordCount', 
+        'wordCount',
         'wordFrequencyCount',
     ];
 
@@ -82,26 +75,19 @@ class Bayes implements ClassifierInterface
      */
     private array $wordFrequencyCount;
 
-    /**
-     * @var ?callable
-     */
-    private $tokenizer = null;
-
-    /**
-     * @param array<string,mixed>|null $options
-     */
-    public function __construct(private ?array $options = null)
-    {
+    public function __construct(
+        private readonly TokenizerInterface $tokenizer = new Tokenizer()
+    ) {
         $this->reset();
     }
 
-    public function categorize(string $text): ?string
+    public function categorize(string|TokenizableInterface $input): ?string
     {
         $maxProbability = -INF;
         $chosenCategory = null;
 
         if ($this->totalDocuments > 0) {
-            $probabilities = $this->probabilities($text) ?? [];
+            $probabilities = $this->probabilities($input) ?? [];
 
             // iterate thru our categories to find the one with max probability
             // for this text
@@ -116,12 +102,8 @@ class Bayes implements ClassifierInterface
         return $chosenCategory;
     }
 
-    public function learn(string $text, string $category): self
+    public function learn(string|TokenizableInterface $input, string $category): self
     {
-        if ($this->tokenizer === null) {
-            throw new RuntimeException('Tokenizer is not set');
-        }
-
         // initialize category data structures if we've never seen this category
         $this->initializeCategory($category);
 
@@ -132,7 +114,7 @@ class Bayes implements ClassifierInterface
         $this->totalDocuments++;
 
         // normalize the text into a word array
-        $tokens = ($this->tokenizer)($text);
+        $tokens = $this->tokenizer->tokenize($input);
 
         // get a frequency count for each token in the text
         $frequencyTable = $this->frequencyTable($tokens);
@@ -159,16 +141,12 @@ class Bayes implements ClassifierInterface
         return $this;
     }
 
-    public function probabilities(string $text): ?array
+    public function probabilities(string|TokenizableInterface $input): ?array
     {
-        if ($this->tokenizer === null) {
-            throw new RuntimeException('Tokenizer is not set');
-        }
-
         $probabilities = [];
 
         if ($this->totalDocuments > 0) {
-            $tokens         = ($this->tokenizer)($text);
+            $tokens         = $this->tokenizer->tokenize($input);
             $frequencyTable = $this->frequencyTable($tokens);
 
             // for this text
@@ -177,6 +155,7 @@ class Bayes implements ClassifierInterface
                 $categoryProbability = $this->docCount[$category] / $this->totalDocuments;
                 $logProbability      = log($categoryProbability);
                 foreach ($frequencyTable as $token => $frequencyInText) {
+                    $token = strval($token); // Treat numeric tokens
                     $tokenProbability = $this->tokenProbability($token, $category);
 
                     // determine the log of the P( w | c ) for this word
@@ -229,27 +208,6 @@ class Bayes implements ClassifierInterface
 
     public function reset(): self
     {
-        if (!$this->options) {
-            $this->options = [];
-        }
-
-        // set default tokenizer
-        $this->tokenizer = function ($text) {
-            // convert everything to lowercase
-            $text = mb_strtolower($text);
-
-            // split the words
-            preg_match_all('/[[:alpha:]]+/u', $text, $matches);
-
-            // first match list of words
-
-            return $matches[0];
-        };
-
-        if (isset($this->options['tokenizer'])) {
-            $this->tokenizer = $this->options['tokenizer'];
-        }
-
         $this->categories         = [];
         $this->docCount           = [];
         $this->totalDocuments     = 0;
@@ -263,7 +221,7 @@ class Bayes implements ClassifierInterface
 
     /**
      * Get the word frequency count for a specific category
-     * 
+     *
      * Used in tests, not a part of the interface
      *
      * @return array<string,int>|null
