@@ -76,7 +76,7 @@ class Bayes implements ClassifierInterface
     private array $wordFrequencyCount;
 
     public function __construct(
-        private readonly TokenizerInterface $tokenizer = new Tokenizer()
+        private readonly TokenizerInterface $tokenizer = new DefaultTokenizer()
     ) {
         $this->reset();
     }
@@ -137,6 +137,11 @@ class Bayes implements ClassifierInterface
             // update the count of all words we have seen mapped to this category
             $this->wordCount[$category] += $frequencyInText;
         }
+
+        // Reorder the word frequency count for this category
+        $wordCount = $this->wordFrequencyCount[$category];
+        arsort($wordCount);
+        $this->wordFrequencyCount[$category] = $wordCount;
 
         return $this;
     }

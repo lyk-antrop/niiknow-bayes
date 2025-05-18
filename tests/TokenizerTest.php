@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace Niiknow\Tests;
 
-use Niiknow\Tokenizer;
+use Niiknow\DefaultTokenizer;
 use Niiknow\TokenizableInterface;
+use Niiknow\TokenizerInterface;
+use PHPUnit\Framework\TestCase;
 
-class TokenizerTest extends \PHPUnit\Framework\TestCase
+class TokenizerTest extends TestCase
 {
-    /**
-     * @var Tokenizer
-     */
-    private $tokenizer;
+    private TokenizerInterface $tokenizer;
 
     protected function setUp(): void
     {
-        $this->tokenizer = new Tokenizer();
+        $this->tokenizer = new DefaultTokenizer();
     }
 
     /**
