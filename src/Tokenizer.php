@@ -1,0 +1,19 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Niiknow;
+
+/**
+ * A very basic tokenizer that splits the text into words
+ */
+class Tokenizer extends AbstractTokenizer
+{
+    protected function tokenizeString(string $text): array
+    {
+        $matches = [];
+        preg_match_all('/[[:alpha:]]+/u', mb_strtolower($text), $matches);
+
+        return $matches[0];
+    }
+}
