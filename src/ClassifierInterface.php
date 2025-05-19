@@ -19,7 +19,7 @@ interface ClassifierInterface
      *
      * @return array<string,float>|null
      */
-    public function probabilities(string|TokenizableInterface $input): ?array;
+    public function probabilities(string|TokenizableInterface $input, ProbabilityFormat $format = ProbabilityFormat::LOG): ?array;
 
     /**
      * Load the classifier from JSON or array data
