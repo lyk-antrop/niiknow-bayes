@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Niiknow;
 
+use Niiknow\ProbabilityFormat;
 use RuntimeException;
 
 /**
@@ -146,7 +147,7 @@ class Bayes implements ClassifierInterface
         return $this;
     }
 
-    public function probabilities(string|TokenizableInterface $input): ?array
+    public function probabilities(string|TokenizableInterface $input, ProbabilityFormat $format = ProbabilityFormat::LOG): ?array
     {
         $probabilities = [];
 
@@ -168,6 +169,30 @@ class Bayes implements ClassifierInterface
                 }
 
                 $probabilities[$category] = $logProbability;
+            }
+
+            // If percentage format is requested, convert log probabilities
+            if ($format === ProbabilityFormat::PERCENTAGE || $format === ProbabilityFormat::PROBABILITY) {
+                // Find the maximum log probability (least negative value)
+                $maxLogProb = max($probabilities);
+
+                // Convert to regular probabilities with normalization
+                $regularProbs = [];
+                foreach ($probabilities as $category => $logProb) {
+                    // Use exponential to convert from log space (and relative to max to prevent underflow)
+                    $regularProbs[$category] = exp($logProb - $maxLogProb);
+                }
+
+                // Normalize to sum to 1 (percentage)
+                $sum = array_sum($regularProbs);
+                if ($sum > 0) {
+                    foreach ($regularProbs as $category => $prob) {
+                        $probability = $prob / $sum;
+                        $probabilities[$category] = $format === ProbabilityFormat::PERCENTAGE
+                            ? $probability * 100
+                            : $probability;
+                    }
+                }
             }
         }
 
