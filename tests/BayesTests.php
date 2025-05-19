@@ -2,8 +2,9 @@
 namespace Tests;
 
 use Niiknow\Bayes;
+use PHPUnit\Framework\TestCase;
 
-class BayesTests extends \PHPUnit\Framework\TestCase
+class BayesTests extends TestCase
 {
     public function testCorrectlyCategorizeLanguage(): void
     {

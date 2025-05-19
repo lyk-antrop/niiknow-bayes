@@ -15,7 +15,7 @@ interface TokenizableInterface
     /**
      * Tokenize itself into an array of tokens
      *
-     * @return array<string> An array of tokens
+     * @return string[] An array of tokens
      */
     public function tokenize(): array;
 }

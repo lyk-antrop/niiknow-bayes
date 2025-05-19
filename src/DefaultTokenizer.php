@@ -7,7 +7,7 @@ namespace Niiknow;
 /**
  * A very basic tokenizer that splits the text into words
  */
-class Tokenizer extends AbstractTokenizer
+class DefaultTokenizer extends AbstractTokenizer
 {
     protected function tokenizeString(string $text): array
     {
