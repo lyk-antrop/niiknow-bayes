@@ -140,9 +140,9 @@ class Bayes implements ClassifierInterface
         }
 
         // Reorder the word frequency count for this category
-        $wordCount = $this->wordFrequencyCount[$category];
-        arsort($wordCount);
-        $this->wordFrequencyCount[$category] = $wordCount;
+        $wordFrequencyCount = $this->wordFrequencyCount[$category];
+        arsort($wordFrequencyCount);
+        $this->wordFrequencyCount[$category] = $wordFrequencyCount;
 
         return $this;
     }
@@ -249,10 +249,20 @@ class Bayes implements ClassifierInterface
         return $this;
     }
 
+    public function prune(int $minFrequency): self
+    {
+        foreach ($this->wordFrequencyCount as $category => $wordFrequencyCount) {
+            $this->wordFrequencyCount[$category] = array_filter($wordFrequencyCount, fn($count) => $count >= $minFrequency);
+            $this->wordCount[$category]          = array_sum($this->wordFrequencyCount[$category]);
+        }
+
+        return $this;
+    }
+
     /**
      * Get the word frequency count for a specific category
      *
-     * Used in tests, not a part of the interface
+     * @deprecated Used in tests, not a part of the interface
      *
      * @return array<string,int>|null
      */

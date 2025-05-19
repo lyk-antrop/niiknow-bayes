@@ -34,4 +34,6 @@ interface ClassifierInterface
     public function toJson(): string;
 
     public function reset(): self;
+
+    public function prune(int $minFrequency): self;
 }

@@ -19,7 +19,7 @@ class BayesTests extends TestCase
         $classifier->learn('Tokyo Japan Chinese', 'japanese');
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -27,7 +27,7 @@ class BayesTests extends TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
@@ -43,7 +43,7 @@ class BayesTests extends TestCase
         $classifier->fromJson($json);
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -51,7 +51,7 @@ class BayesTests extends TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
@@ -92,7 +92,7 @@ class BayesTests extends TestCase
         $classifier->learn('Tokyo Japan Chinese', 'japanese');
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -100,7 +100,7 @@ class BayesTests extends TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
@@ -116,7 +116,7 @@ class BayesTests extends TestCase
         $classifier->fromJson($json);
 
         // make sure it learned the `chinese` category correctly
-        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese');
+        $chineseFrequencyCount = $classifier->getWordFrequencyCount('chinese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($chineseFrequencyCount['chinese'] === 5); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($chineseFrequencyCount['beijing'] === 1);
@@ -124,7 +124,7 @@ class BayesTests extends TestCase
         $this->assertTrue($chineseFrequencyCount['macao'] === 1);
 
         // make sure it learned the `japanese` category correctly
-        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese');
+        $japaneseFrequencyCount = $classifier->getWordFrequencyCount('japanese'); // @phpstan-ignore method.deprecated
 
         $this->assertTrue($japaneseFrequencyCount['tokyo'] === 1); // @phpstan-ignore offsetAccess.notFound
         $this->assertTrue($japaneseFrequencyCount['japan'] === 1);
