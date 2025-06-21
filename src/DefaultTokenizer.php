@@ -9,7 +9,7 @@ namespace Niiknow;
  */
 class DefaultTokenizer extends AbstractTokenizer
 {
-    protected function tokenizeString(string $text): array
+    protected function tokenizeString(string $text, mixed $tokenizerArgument = null): array
     {
         $matches = [];
         preg_match_all('/[[:alpha:]]+/u', mb_strtolower($text), $matches);
