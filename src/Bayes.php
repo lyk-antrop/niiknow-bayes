@@ -251,12 +251,45 @@ class Bayes implements ClassifierInterface
 
     public function prune(int $minFrequency): self
     {
+        // Not implemented yet
+
+        /*
+        // First, prune word frequency counts by category
         foreach ($this->wordFrequencyCount as $category => $wordFrequencyCount) {
-            $this->wordFrequencyCount[$category] = array_filter($wordFrequencyCount, fn($count) => $count >= $minFrequency);
-            $this->wordCount[$category]          = array_sum($this->wordFrequencyCount[$category]);
+            $this->wordFrequencyCount[$category] = array_filter(
+                $wordFrequencyCount,
+                fn($count) => $count >= $minFrequency
+            );
+            $this->wordCount[$category] = array_sum($this->wordFrequencyCount[$category]);
         }
+        */
+
+        // Now rebuild vocabulary to contain only tokens that appear in at least one category
+        $this->pruneVocabulary();
 
         return $this;
+    }
+
+    /**
+     * Rebuild the vocabulary to contain only unique tokens across all categories
+     * and update the vocabulary size
+     */
+    private function pruneVocabulary(): void
+    {
+        $newVocabulary = [];
+        $vocabularySize = 0;
+
+        foreach ($this->wordFrequencyCount as $category => $wordFrequencyCount) {
+            foreach (array_keys($wordFrequencyCount) as $token) {
+                if (!isset($newVocabulary[$token])) {
+                    $newVocabulary[$token] = true;
+                    $vocabularySize++;
+                }
+            }
+        }
+
+        $this->vocabulary = $newVocabulary;
+        $this->vocabularySize = $vocabularySize;
     }
 
     /**
