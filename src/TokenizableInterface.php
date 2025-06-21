@@ -15,7 +15,8 @@ interface TokenizableInterface
     /**
      * Tokenize itself into an array of tokens
      *
+     * @param mixed $tokenizerArgument Optional argument for the tokenizer
      * @return string[] An array of tokens
      */
-    public function tokenize(): array;
+    public function tokenize(mixed $tokenizerArgument = null): array;
 }

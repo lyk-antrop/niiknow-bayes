@@ -11,5 +11,5 @@ interface TokenizerInterface
      *
      * @return array<string> An array of tokens
      */
-    public function tokenize(TokenizableInterface|string $input): array;
+    public function tokenize(TokenizableInterface|string $input, mixed $tokenizerArgument = null): array;
 }

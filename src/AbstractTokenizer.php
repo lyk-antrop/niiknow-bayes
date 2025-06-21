@@ -6,21 +6,21 @@ namespace Niiknow;
 
 abstract class AbstractTokenizer implements TokenizerInterface
 {
-    public final function tokenize(string|TokenizableInterface $input): array
+    public function tokenize(string|TokenizableInterface $input, mixed $tokenizerArgument = null): array
     {
         if (is_string($input)) {
-            return $this->tokenizeString($input);
+            return $this->tokenizeString($input, $tokenizerArgument);
         }
 
-        return $this->tokenizeObject($input);
+        return $this->tokenizeObject($input, $tokenizerArgument);
     }
 
     /** @return array<string> */
-    abstract protected function tokenizeString(string $text): array;
+    abstract protected function tokenizeString(string $text, mixed $tokenizerArgument = null): array;
 
     /** @return array<string> */
-    protected final function tokenizeObject(TokenizableInterface $tokenizable): array
+    protected final function tokenizeObject(TokenizableInterface $tokenizable, mixed $tokenizerArgument = null): array
     {
-        return $tokenizable->tokenize();
+        return $tokenizable->tokenize($tokenizerArgument);
     }
 }

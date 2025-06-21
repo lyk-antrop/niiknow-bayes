@@ -73,8 +73,8 @@ class TokenizerTest extends TestCase
         return new class($content) implements TokenizableInterface {
 
             public function __construct(private readonly string $content) {}
-            
-            public function tokenize(): array
+
+            public function tokenize(mixed $tokenizerArgument = null): array
             {
                 $matches = [];
                 preg_match_all('/[[:alpha:]]+/u', mb_strtolower($this->content), $matches);
