@@ -249,11 +249,15 @@ class Bayes implements ClassifierInterface
         return $this;
     }
 
+    /**
+     * @deprecated Not to be used at this time
+     */
     public function prune(int $minFrequency): self
     {
-        // Not implemented yet
+        if ($minFrequency < 1) {
+            throw new RuntimeException('Minimum frequency must be at least 1');
+        }
 
-        /*
         // First, prune word frequency counts by category
         foreach ($this->wordFrequencyCount as $category => $wordFrequencyCount) {
             $this->wordFrequencyCount[$category] = array_filter(
@@ -262,7 +266,6 @@ class Bayes implements ClassifierInterface
             );
             $this->wordCount[$category] = array_sum($this->wordFrequencyCount[$category]);
         }
-        */
 
         // Now rebuild vocabulary to contain only tokens that appear in at least one category
         $this->pruneVocabulary();
