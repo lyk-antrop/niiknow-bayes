@@ -41,14 +41,14 @@ class Bayes implements ClassifierInterface
     /**
      * Hashmap of document counts by category
      *
-     * @var array<string,int>
+     * @var array<string,int|float>
      */
     private array $docCount;
 
     /**
      * Trained document count
      */
-    private int $totalDocuments;
+    private int|float $totalDocuments;
 
     /**
      * Hashmap of known tokens
@@ -65,14 +65,14 @@ class Bayes implements ClassifierInterface
     /**
      * Hashmap of word counts by category
      *
-     * @var array<string,int>
+     * @var array<string,int|float>
      */
     private array $wordCount;
 
     /**
      * Word frequency table for each category
      *
-     * @var array<string,array<string,int>>
+     * @var array<string,array<string,int|float>>
      */
     private array $wordFrequencyCount;
 
@@ -103,16 +103,16 @@ class Bayes implements ClassifierInterface
         return $chosenCategory;
     }
 
-    public function learn(string|TokenizableInterface $input, string $category): self
+    public function learn(string|TokenizableInterface $input, string $category, float $weight = 1.0): self
     {
         // initialize category data structures if we've never seen this category
         $this->initializeCategory($category);
 
         // update our count of how many documents mapped to this category
-        $this->docCount[$category]++;
+        $this->docCount[$category] += $weight;
 
         // update the total number of documents we have learned from
-        $this->totalDocuments++;
+        $this->totalDocuments += $weight;
 
         // normalize the text into a word array
         $tokens = $this->tokenizer->tokenize($input);
@@ -130,13 +130,13 @@ class Bayes implements ClassifierInterface
 
             // update the frequency information for this word in this category
             if (!isset($this->wordFrequencyCount[$category][$token])) {
-                $this->wordFrequencyCount[$category][$token] = $frequencyInText;
+                $this->wordFrequencyCount[$category][$token] = $frequencyInText * $weight;
             } else {
-                $this->wordFrequencyCount[$category][$token] += $frequencyInText;
+                $this->wordFrequencyCount[$category][$token] += $frequencyInText * $weight;
             }
 
             // update the count of all words we have seen mapped to this category
-            $this->wordCount[$category] += $frequencyInText;
+            $this->wordCount[$category] += $frequencyInText * $weight;
         }
 
         // Reorder the word frequency count for this category
@@ -300,7 +300,7 @@ class Bayes implements ClassifierInterface
      *
      * @deprecated Used in tests, not a part of the interface
      *
-     * @return array<string,int>|null
+     * @return array<string,int|float>|null
      */
     public function getWordFrequencyCount(string $category): ?array
     {
