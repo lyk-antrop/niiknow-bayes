@@ -229,6 +229,24 @@ class Bayes implements ClassifierInterface
             $result[$k] = $this->{$k};
         }
 
+        // Round float counters to remove noise digits from weighted accumulation
+        // (e.g. 3200.000000000087 → 3200.0). Keeps precision for genuine fractions.
+        $result['totalDocuments'] = round($result['totalDocuments'], 6);
+
+        foreach ($result['docCount'] as $cat => $count) {
+            $result['docCount'][$cat] = round($count, 6);
+        }
+
+        foreach ($result['wordCount'] as $cat => $count) {
+            $result['wordCount'][$cat] = round($count, 6);
+        }
+
+        foreach ($result['wordFrequencyCount'] as $cat => $tokens) {
+            foreach ($tokens as $token => $freq) {
+                $result['wordFrequencyCount'][$cat][$token] = round($freq, 6);
+            }
+        }
+
         if (($result = json_encode($result)) === false) {
             throw new RuntimeException('Failed to serialize to JSON: ' . json_last_error_msg());
         }
