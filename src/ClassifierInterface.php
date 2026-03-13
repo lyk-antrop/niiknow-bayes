@@ -12,7 +12,7 @@ interface ClassifierInterface
     /**
      * Teach the classifier
      */
-    public function learn(string|TokenizableInterface $input, string $category): self;
+    public function learn(string|TokenizableInterface $input, string $category, float $weight = 1.0): self;
 
     /**
      * Extract the probabilities for each known category
