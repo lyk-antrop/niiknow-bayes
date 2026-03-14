@@ -1,109 +1,195 @@
-# `bayes`: A Naive-Bayes classifier for PHP
-[![Build Status](https://travis-ci.org/niiknow/bayes.svg?branch=master)](https://travis-ci.org/niiknow/bayes)
+# `bayes` — Naive-Bayes Classifier for PHP
 
-`bayes` takes a document (piece of text), and tells you what category that document belongs to.
+A Naive-Bayes text classifier. Takes a document (piece of text or a pre-tokenized object) and
+tells you what category it belongs to.
 
-This library was ported from a nodejs lib @ https://github.com/ttezel/bayes
-
-* Proven and popular classifier in nodejs - https://www.npmjs.com/package/bayes
-* We kept the json serialization signature so you can simply use the learned/trained json output from both PHP and nodejs library.
+Originally ported from the Node.js library [ttezel/bayes](https://github.com/ttezel/bayes).
+This is a **local vendor fork** with significant architectural improvements over the
+[upstream niiknow/bayes](https://github.com/niiknow/bayes).
 
 ## What can I use this for?
 
-You can use this for categorizing any text content into any arbitrary set of **categories**. For example:
+Categorize any text content into arbitrary categories:
 
-- is an email **spam**, or **not spam** ?
-- is a news article about **technology**, **politics**, or **sports** ?
-- is a piece of text expressing **positive** emotions, or **negative** emotions?
+- spam detection
+- sentiment analysis (positive / negative)
+- topic classification (technology / politics / sports)
+- multi-dimension tagging (e.g. per-attribute Bayes classifiers)
 
-## Installing
+## Requirements
 
+- PHP 8.3+
+- No external dependencies
+
+## Fork improvements over upstream
+
+### Tokenizer separation
+
+The upstream library couples tokenization to the classifier via a closure passed in an options
+array. This fork introduces a clean architecture:
+
+- **`TokenizerInterface`** — contract for tokenizers: `tokenize(string|TokenizableInterface $input): array`
+- **`AbstractTokenizer`** — base class that dispatches to `tokenizeString()` for strings and
+  delegates to the object's own `tokenize()` method for `TokenizableInterface` inputs
+- **`TokenizableInterface`** — objects that know how to tokenize themselves. This allows
+  domain objects (e.g. a profile facade) to implement custom tokenization logic without
+  the classifier knowing anything about domain structure
+- **`DefaultTokenizer`** — simple word splitter (`/[[:alpha:]]+/u`), same behaviour as upstream
+
+The tokenizer is injected via constructor: `new Bayes(new MyCustomTokenizer())`.
+
+### Weighted learning
+
+`learn()` accepts an optional `float $weight` parameter (default `1.0`):
+
+```php
+$classifier->learn($text, 'category', weight: 0.7);
 ```
-composer require niiknow/bayes
+
+The weight scales all four internal counters (`docCount`, `totalDocuments`, `wordCount`,
+`wordFrequencyCount`) multiplicatively. This allows:
+
+- **Source weighting** — give live confirmed data full weight, archived/stale data reduced weight
+- **Conformance weighting** — boost records that disagree with the model's current prediction
+  (they carry the most new signal)
+- **Any multiplicative scheme** — compose multiple weight factors before passing to `learn()`
+
+Float counters are rounded to 6 decimal places on serialization to prevent noise accumulation.
+
+### Probability output formats
+
+`probabilities()` accepts a `ProbabilityFormat` enum:
+
+```php
+$classifier->probabilities($text, ProbabilityFormat::LOG);        // raw log probabilities (default)
+$classifier->probabilities($text, ProbabilityFormat::PROBABILITY); // normalized 0..1
+$classifier->probabilities($text, ProbabilityFormat::PERCENTAGE);  // normalized 0..100
 ```
+
+Conversion uses the log-sum-exp trick to prevent underflow.
+
+### Vocabulary pruning
+
+```php
+$classifier->prune(minFrequency: 3);
+```
+
+Removes tokens that appear fewer than `minFrequency` times across all categories. Reduces
+model size and can improve generalization by eliminating noise tokens.
+
+### Interface-driven design
+
+`ClassifierInterface` defines the full public contract: `learn()`, `categorize()`,
+`probabilities()`, `toJson()`, `fromJson()`, `reset()`, `prune()`. All type-hinted with
+union types (`string|TokenizableInterface`) and enums.
+
+### Other improvements
+
+- `declare(strict_types=1)` throughout
+- PHP 8.3 minimum (constructor promotion, enums, readonly, union types)
+- PHPStan clean at max level
+- JSON round-trip preserves float precision via controlled rounding
+- Word frequency counts sorted by frequency (descending) after each `learn()` call
 
 ## Usage
 
 ```php
-$classifier = new \Niiknow\Bayes();
+use Niiknow\Bayes;
+use Niiknow\ProbabilityFormat;
 
-// teach it positive phrases
+$classifier = new Bayes();
 
+// teach it
 $classifier->learn('amazing, awesome movie!! Yeah!! Oh boy.', 'positive');
 $classifier->learn('Sweet, this is incredibly, amazing, perfect, great!!', 'positive');
-
-// teach it a negative phrase
-
 $classifier->learn('terrible, shitty thing. Damn. Sucks!!', 'negative');
 
-// now ask it to categorize a document it has never seen before
-
+// classify
 $classifier->categorize('awesome, cool, amazing!! Yay.');
 // => 'positive'
 
-// serialize the classifier's state as a JSON string.
-$stateJson = $classifier->toJson();
+// get probability distribution
+$classifier->probabilities('awesome, cool, amazing!! Yay.', ProbabilityFormat::PERCENTAGE);
+// => ['positive' => 87.3, 'negative' => 12.7]
 
-// load the classifier back from its JSON representation.
-$classifier->fromJson($stateJson);
+// weighted learning
+$classifier->learn($archivedText, 'positive', weight: 0.5);
 
+// serialize / deserialize
+$json = $classifier->toJson();
+$classifier->fromJson($json);
+```
+
+### Custom tokenizer
+
+```php
+use Niiknow\AbstractTokenizer;
+
+class StopwordTokenizer extends AbstractTokenizer
+{
+    private array $stopwords = ['der', 'die', 'das', 'the', 'a', 'an'];
+
+    protected function tokenizeString(string $text, mixed $tokenizerArgument = null): array
+    {
+        preg_match_all('/[[:alpha:]]+/u', mb_strtolower($text), $matches);
+        return array_values(array_diff($matches[0], $this->stopwords));
+    }
+}
+
+$classifier = new Bayes(new StopwordTokenizer());
+```
+
+### Pre-tokenized objects
+
+```php
+use Niiknow\TokenizableInterface;
+
+class ProfileFacade implements TokenizableInterface
+{
+    public function tokenize(mixed $tokenizerArgument = null): array
+    {
+        // domain-specific tokenization: combine description tokens,
+        // service codes, location indicators, etc.
+        return [...$this->descriptionTokens, ...$this->serviceTokens];
+    }
+}
+
+$classifier->learn(new ProfileFacade($profile), 'category');
 ```
 
 ## API
 
-### `$classifier = new \Niiknow\Bayes([options])`
+### `new Bayes(?TokenizerInterface $tokenizer = new DefaultTokenizer())`
 
-Returns an instance of a Naive-Bayes Classifier.
+Creates a classifier instance with the given tokenizer.
 
-Pass in an optional `options` object to configure the instance. If you specify a `tokenizer` function in `options`, it will be used as the instance's tokenizer.
+### `learn(string|TokenizableInterface $input, string $category, float $weight = 1.0): self`
 
-### `$classifier->learn(text, category)`
+Train the classifier. Accepts raw text (tokenized by the injected tokenizer) or a
+`TokenizableInterface` object (tokenizes itself).
 
-Teach your classifier what `category` the `text` belongs to. The more you teach your classifier, the more reliable it becomes. It will use what it has learned to identify new documents that it hasn't seen before.
+### `categorize(string|TokenizableInterface $input): ?string`
 
-### `$classifier->categorize(text)`
+Returns the most likely category, or `null` if the classifier has no training data.
 
-Returns the `category` it thinks `text` belongs to. Its judgement is based on what you have taught it with **.learn()**.
+### `probabilities(string|TokenizableInterface $input, ProbabilityFormat $format = LOG): ?array`
 
-### `$classifier->probabilities(text)`
+Returns an associative array of category => probability in the requested format.
 
-Extract the probabilities for each known category.
+### `toJson(): string` / `fromJson(array|string $json): self`
 
-### `$classifier->toJson()`
+Serialize and restore classifier state. JSON format is compatible with the upstream
+niiknow/bayes library (when weight = 1.0).
 
-Returns the JSON representation of a classifier.
+### `reset(): self`
 
-### `$classifier->fromJson(jsonStr)`
+Clear all training data.
 
-Returns a classifier instance from the JSON representation. Use this with the JSON representation obtained from `$classifier->toJson()`
+### `prune(int $minFrequency): self`
 
-## Stopwords
+Remove low-frequency tokens from the model vocabulary.
 
-You can pass in your own tokenizer function in the constructor.  Example:
+## License
 
-```
-// array containing stopwords
-$stopwords = array("der", "die", "das", "the");
-
-// escape the stopword array and implode with pipe
-$s = '~^\W*('.implode("|", array_map("preg_quote", $stopwords)).')\W+\b|\b\W+(?1)\W*$~i';
-
-$options['tokenizer'] = function($text) use ($s) {
-            // convert everything to lowercase
-            $text = mb_strtolower($text);
-
-            // remove stop words
-            $text = preg_replace($s, '', $text);
-
-            // split the words
-            preg_match_all('/[[:alpha:]]+/u', $text, $matches);
-
-            // first match list of words
-            return $matches[0];
-        };
-
-$classifier = new \niiknow\Bayes($options);
-```
-
-## MIT
+MIT
 
